@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'WebController_Example' do
+  pod 'WebController', :path => '../'
+
+  target 'WebController_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end

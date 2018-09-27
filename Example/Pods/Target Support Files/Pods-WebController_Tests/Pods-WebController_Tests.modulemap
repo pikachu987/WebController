@@ -1,0 +1,6 @@
+framework module Pods_WebController_Tests {
+  umbrella header "Pods-WebController_Tests-umbrella.h"
+
+  export *
+  module * { export * }
+}

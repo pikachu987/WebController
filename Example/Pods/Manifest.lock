@@ -1,0 +1,16 @@
+PODS:
+  - WebController (0.1.0)
+
+DEPENDENCIES:
+  - WebController (from `../`)
+
+EXTERNAL SOURCES:
+  WebController:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  WebController: 496d5d353e0fe70e93bbe564852177fc372f2c8d
+
+PODFILE CHECKSUM: 51dbb3203fb5f2e44f77b04bde6585e29c9868bd
+
+COCOAPODS: 1.5.3

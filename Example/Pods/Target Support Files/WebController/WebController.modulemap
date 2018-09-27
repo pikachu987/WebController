@@ -1,0 +1,6 @@
+framework module WebController {
+  umbrella header "WebController-umbrella.h"
+
+  export *
+  module * { export * }
+}
