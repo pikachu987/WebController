@@ -18,8 +18,8 @@ Once you receive your app's schema from DeepLink or UniversalLink on your websit
 
 <br><br>
 
-![demo](./Etc/img1.png)
-![demo2](./Etc/img2.png)
+![demo](./Etc/img_1.png)
+![demo2](./Etc/img_2.png)
 
 ## Requirements
 
