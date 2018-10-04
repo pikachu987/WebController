@@ -48,8 +48,7 @@ open class WebController: UIViewController {
     }()
     
     public lazy var indicatorView: UIActivityIndicatorView = {
-        let indicatorView = UIActivityIndicatorView()
-        indicatorView.style = UIActivityIndicatorView.Style.whiteLarge
+        let indicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorView.Style.whiteLarge)
         indicatorView.color = UIColor.darkGray
         indicatorView.translatesAutoresizingMaskIntoConstraints = false
         indicatorView.isHidden = false
