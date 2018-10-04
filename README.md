@@ -12,7 +12,6 @@ You can simply modify the bottom ToolBar.
 There is a ProgressView so you can see the Load status of WebView.
 Once you receive your app's schema from DeepLink or UniversalLink on your website, you can open the app.
 
-
 ![demo](./Etc/gif1.gif)
 ![demo2](./Etc/gif2.gif)
 
