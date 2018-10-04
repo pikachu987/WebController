@@ -20,7 +20,37 @@
                     <view key="view" contentMode="scaleToFill" id="kh9-bI-dsS">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Rou-2t-eeR">
+                                <rect key="frame" x="20" y="164" width="335" height="60"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="60" id="2eY-PR-MVz"/>
+                                </constraints>
+                                <state key="normal" title="Custom WebController"/>
+                                <connections>
+                                    <action selector="showCustom:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="v76-Pb-sAg"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vFr-KH-RSg">
+                                <rect key="frame" x="20" y="84" width="335" height="60"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="60" id="4K4-q9-ybM"/>
+                                </constraints>
+                                <state key="normal" title="Simple WebController"/>
+                                <connections>
+                                    <action selector="showSimple:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="TyM-2M-hP2"/>
+                                </connections>
+                            </button>
+                        </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="Rou-2t-eeR" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="20" id="5hs-xF-iwv"/>
+                            <constraint firstItem="Rou-2t-eeR" firstAttribute="top" secondItem="vFr-KH-RSg" secondAttribute="bottom" constant="20" id="Czv-zE-qp2"/>
+                            <constraint firstAttribute="trailing" secondItem="Rou-2t-eeR" secondAttribute="trailing" constant="20" id="H9o-ol-UXT"/>
+                            <constraint firstItem="vFr-KH-RSg" firstAttribute="top" secondItem="jyV-Pf-zRb" secondAttribute="bottom" constant="20" id="Ndu-vM-beA"/>
+                            <constraint firstItem="vFr-KH-RSg" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="20" id="YZl-rO-Xqj"/>
+                            <constraint firstAttribute="trailing" secondItem="vFr-KH-RSg" secondAttribute="trailing" constant="20" id="gpo-JD-HPk"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="2P8-qJ-E52"/>
                 </viewController>

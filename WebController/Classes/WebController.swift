@@ -223,7 +223,11 @@ open class WebController: UIViewController {
         self.titleButton.setTitleColor(self.titleTintColor, for: .normal)
         
         if let host = self.webView.url?.host {
-            self.titleButton.setTitle("\(host) ▾", for: .normal)
+            if let title = self.delegate?.webController?(self, title: "\(host) ▾") {
+                self.titleButton.setTitle(title, for: .normal)
+            } else {
+                self.titleButton.setTitle("\(host) ▾", for: .normal)
+            }
             self.titleButton.sizeToFit()
         }
         
