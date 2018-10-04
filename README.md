@@ -124,12 +124,14 @@ webController.toolView.setForwardBarButtonItem(UIImage(named: ""))
 
 ```swift
 class ViewController: UIViewController {
-override func viewDidLoad() {
-super.viewDidLoad()
 
-let webController = WebController()
-webController.delegate = self
-}
+  override func viewDidLoad() {
+    super.viewDidLoad()
+
+    let webController = WebController()
+    webController.delegate = self
+  }
+
 }
 
 extension ViewController: WebControllerDelegate {
@@ -140,7 +142,7 @@ Called when title changes.
 - webController: WebControllerDelegate The UIViewController invoking the delegate method.
 - didChangeTitle: The title to change.
 */
-@objc optional func webController(_ webController: WebController, didChangeTitle: String?) {
+func webController(_ webController: WebController, didChangeTitle: String?) {
 
 }
 
@@ -150,7 +152,7 @@ Called when url changes.
 - webController: WebControllerDelegate The UIViewController invoking the delegate method.
 - didChangeURL: The url to change.
 */
-@objc optional func webController(_ webController: WebController, didChangeURL: URL?) {
+func webController(_ webController: WebController, didChangeURL: URL?) {
 
 }
 
@@ -160,7 +162,7 @@ It is called when the load starts or ends.
 - webController: WebControllerDelegate The UIViewController invoking the delegate method.
 - didLoading: load starts or ends.
 */
-@objc optional func webController(_ webController: WebController, didLoading: Bool) {
+func webController(_ webController: WebController, didLoading: Bool) {
 
 }
 
@@ -171,7 +173,7 @@ Called when title changes.
 - title: will change based on the return value.
 - Returns: UINavigationTitle is changed. default is changed to title which is received as argument.
 */
-@objc optional func webController(_ webController: WebController, title: String?) -> String? {
+func webController(_ webController: WebController, title: String?) -> String? {
 
 }
 
@@ -182,7 +184,7 @@ It will be called when the site becomes an Alert.
 - alertController: This is an alert window that will appear on the screen.
 - didUrl: The website URL with the alert window.
 */
-@objc optional func webController(_ webController: WebController, alertController: UIAlertController, didUrl: URL?) {
+func webController(_ webController: WebController, alertController: UIAlertController, didUrl: URL?) {
 
 }
 
@@ -193,7 +195,7 @@ If the website fails to load, the Alert is called.
 - alertController: This is an alert window that will appear on the screen.
 - didUrl: The website URL with the alert window.
 */
-@objc optional func webController(_ webController: WebController, failAlertController: UIAlertController, didUrl: URL?) {
+func webController(_ webController: WebController, failAlertController: UIAlertController, didUrl: URL?) {
 
 }
 
@@ -204,7 +206,7 @@ If the scheme is not http or https, think of it as a deep link or universal link
 - openUrl: Url to use 'UIApplication.shared.openURL'.
 - Returns: Return true to use 'UIApplication.shared.openURL'. default is true.
 */
-@objc optional func webController(_ webController: WebController, openUrl: URL?) -> Bool {
+func webController(_ webController: WebController, openUrl: URL?) -> Bool {
 
 }
 
@@ -215,7 +217,7 @@ Decides whether to allow or cancel a navigation.
 - navigationAction: Descriptive information about the action triggering the navigation request.
 - decisionHandler: The decision handler to call to allow or cancel the navigation. The argument is one of the constants of the enumerated type WKNavigationActionPolicy.
 */
-@objc optional func webController(_ webController: WebController, navigationAction: WKNavigationAction, decisionHandler: (WKNavigationActionPolicy) -> Void) {
+func webController(_ webController: WebController, navigationAction: WKNavigationAction, decisionHandler: (WKNavigationActionPolicy) -> Void) {
 
 }
 
@@ -226,7 +228,7 @@ Decides whether to allow or cancel a navigation after its response is known.
 - navigationResponse: Descriptive information about the navigation response.
 - decisionHandler: decisionHandler The decision handler to call to allow or cancel the navigation. The argument is one of the constants of the enumerated type WKNavigationResponsePolicy.
 */
-@objc optional func webController(_ webController: WebController, navigationResponse: WKNavigationResponse, decisionHandler: (WKNavigationResponsePolicy) -> Void) {
+func webController(_ webController: WebController, navigationResponse: WKNavigationResponse, decisionHandler: (WKNavigationResponsePolicy) -> Void) {
 
 }
 
@@ -237,7 +239,7 @@ Invoked when the web view needs to respond to an authentication challenge.
 - challenge: The authentication challenge.
 - completionHandler: The completion handler you must invoke to respond to the challenge. The disposition argument is one of the constants of the enumerated type NSURLSessionAuthChallengeDisposition. When disposition is NSURLSessionAuthChallengeUseCredential, the credential argument is the credential to use, or nil to indicate continuing without a credential.
 */
-@objc optional func webController(_ webController: WebController, challenge: URLAuthenticationChallenge, completionHandler: (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+func webController(_ webController: WebController, challenge: URLAuthenticationChallenge, completionHandler: (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
 
 }
 
