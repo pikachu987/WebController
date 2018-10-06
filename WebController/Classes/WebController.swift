@@ -251,6 +251,8 @@ open class WebController: UIViewController {
         self.view.addSubview(self.progressView)
         self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[progressView]-0-|", options: [], metrics: nil, views: ["progressView": self.progressView]))
         self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[topGuide]-0-[progressView(2)]", options: [], metrics: nil, views: ["progressView": self.progressView, "topGuide": self.topLayoutGuide]))
+        
+        self.toolView.initVars()
     }
     
     open override func didReceiveMemoryWarning() {
@@ -328,9 +330,9 @@ open class WebController: UIViewController {
     /**
      Navigates to a requested URL.
      - Parameters:
-        - urlPath: Url to Load WebView
-        - cachePolicy: cachePolicy The cache policy for the request. Defaults to `.useProtocolCachePolicy`
-        - timeoutInterval: timeoutInterval The timeout interval for the request. Defaults to 0.0
+     - urlPath: Url to Load WebView
+     - cachePolicy: cachePolicy The cache policy for the request. Defaults to `.useProtocolCachePolicy`
+     - timeoutInterval: timeoutInterval The timeout interval for the request. Defaults to 0.0
      */
     public func load(_ urlPath: String?, cachePolicy: NSURLRequest.CachePolicy = .useProtocolCachePolicy, timeoutInterval: TimeInterval = 0) {
         guard let urlPath = urlPath, let url = URL(string: urlPath) else { return }
@@ -340,9 +342,9 @@ open class WebController: UIViewController {
     /**
      Navigates to a requested URL.
      - Parameters:
-        - url: Url to Load WebView
-        - cachePolicy: cachePolicy The cache policy for the request. Defaults to `.useProtocolCachePolicy`
-        - timeoutInterval: timeoutInterval The timeout interval for the request. Defaults to 0.0
+     - url: Url to Load WebView
+     - cachePolicy: cachePolicy The cache policy for the request. Defaults to `.useProtocolCachePolicy`
+     - timeoutInterval: timeoutInterval The timeout interval for the request. Defaults to 0.0
      */
     public func load(_ url: URL?, cachePolicy: NSURLRequest.CachePolicy = .useProtocolCachePolicy, timeoutInterval: TimeInterval = 0) {
         guard let url = url else { return }
@@ -352,8 +354,8 @@ open class WebController: UIViewController {
     /**
      Evaluates the given JavaScript string.
      - Parameters:
-        - javaScriptString: The JavaScript string to evaluate.
-        - completionHandler: A block to invoke when script evaluation completes or fails.
+     - javaScriptString: The JavaScript string to evaluate.
+     - completionHandler: A block to invoke when script evaluation completes or fails.
      */
     public func evaluateJavaScript(_ javaScriptString: String, completionHandler: ((Any?, Error?) -> Void)?) {
         self.webView.evaluateJavaScript(javaScriptString, completionHandler: completionHandler)
@@ -365,7 +367,7 @@ open class WebController: UIViewController {
     /**
      When you touch TitleView, a shared event that runs
      - Parameters:
-        - sender: UIButton
+     - sender: UIButton
      */
     @objc private func shareAction(_ sender: UIButton) {
         guard let urlPath = self.webView.url?.absoluteString else { return }
@@ -376,25 +378,32 @@ open class WebController: UIViewController {
 }
 
 // MARK: ToolViewDelegate
-extension WebController: ToolViewDelegate{
+extension WebController: ToolViewDelegate {
+    
     var toolViewWebCanGoBack: Bool {
         return self.webView.canGoBack
     }
+    
     var toolViewWebCanGoForward: Bool {
         return self.webView.canGoForward
     }
+    
     func toolViewWebStopLoading() {
         self.webView.stopLoading()
     }
+    
     func toolViewWebReload() {
         self.webView.reload()
     }
+    
     func toolViewWebGoForward() {
         self.webView.goForward()
     }
+    
     func toolViewWebGoBack() {
         self.webView.goBack()
     }
+    
     func toolViewInteractivePopGestureRecognizerEnabled(_ isEnabled: Bool) {
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = isEnabled
     }
@@ -402,14 +411,16 @@ extension WebController: ToolViewDelegate{
 
 // MARK: WKNavigationDelegate
 extension WebController: WKNavigationDelegate {
-    private func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+    
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         self.toolView.loadDidStart()
     }
-    private func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    
+    public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         self.toolView.loadDidFinish()
     }
     
-    private func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         self.toolView.loadDidFinish()
         if error._code == NSURLErrorCancelled { return }
         let alertController = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
@@ -420,7 +431,7 @@ extension WebController: WKNavigationDelegate {
         }
     }
     
-    private func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard self.delegate?.webController?(self, navigationAction: navigationAction, decisionHandler: decisionHandler) != nil else {
             guard let url = navigationAction.request.url else {
                 decisionHandler(.cancel)
@@ -446,14 +457,14 @@ extension WebController: WKNavigationDelegate {
         }
     }
     
-    private func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
         guard self.delegate?.webController?(self, navigationResponse: navigationResponse, decisionHandler: decisionHandler) != nil else {
             decisionHandler(.allow)
             return
         }
     }
     
-    private func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    public func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         guard self.delegate?.webController?(self, challenge: challenge, completionHandler: completionHandler) != nil else {
             completionHandler(.performDefaultHandling, nil)
             return
@@ -464,7 +475,7 @@ extension WebController: WKNavigationDelegate {
 // MARK: WKUIDelegate
 extension WebController: WKUIDelegate {
     
-    private func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+    public func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
         let alertController: UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "Confirm", style: .cancel, handler: {(action: UIAlertAction) -> Void in
             completionHandler(true)
@@ -478,7 +489,7 @@ extension WebController: WKUIDelegate {
         }
     }
     
-    private func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
+    public func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
         let alertController: UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
         alertController.addTextField { (textField) in
             textField.text = defaultText
@@ -492,7 +503,7 @@ extension WebController: WKUIDelegate {
         }
     }
     
-    private func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+    public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alertController: UIAlertController = UIAlertController(title: message, message: nil, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: {(action: UIAlertAction) -> Void in
             completionHandler()

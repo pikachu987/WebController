@@ -78,30 +78,6 @@ public class ToolView: UIView {
     public lazy var toolbar: UIToolbar = {
         let toolbar = UIToolbar()
         toolbar.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(toolbar)
-        self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[toolbar]-0-|", options: [], metrics: nil, views: ["toolbar": toolbar]))
-        var bottomConstant: CGFloat = 0
-        if #available(iOS 11.0, *) {
-            bottomConstant = UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0
-        }
-        let topConstraint = NSLayoutConstraint(
-            item: self,
-            attribute: .top,
-            relatedBy: .equal,
-            toItem: toolbar,
-            attribute: .top,
-            multiplier: 1,
-            constant: 0)
-        let bottomConstraint = NSLayoutConstraint(
-            item: self,
-            attribute: .bottom,
-            relatedBy: .equal,
-            toItem: toolbar,
-            attribute: .bottom,
-            multiplier: 1,
-            constant: bottomConstant)
-        bottomConstraint.priority = UILayoutPriority(500)
-        self.addConstraints([topConstraint, bottomConstraint])
         return toolbar
     }()
     
@@ -139,7 +115,7 @@ public class ToolView: UIView {
      */
     public var isHiddenToolBar: Bool = false {
         didSet {
-            self.toolViewHeightConstraint?.priority = UILayoutPriority(self.isHiddenToolBar ? 750 : 250)
+            self.makeToolBar()
         }
     }
     
@@ -178,16 +154,6 @@ public class ToolView: UIView {
     public override func awakeFromNib() {
         super.awakeFromNib()
         
-        let toolViewHeightConstraint = NSLayoutConstraint(item: self, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .height, multiplier: 1, constant: 0)
-        toolViewHeightConstraint.priority = UILayoutPriority(self.isHiddenToolBar ? 750 : 250)
-        self.addConstraint(toolViewHeightConstraint)
-        self.toolViewHeightConstraint = toolViewHeightConstraint
-        
-        self.clipsToBounds = true
-        self.toolbar.setItems(self.historyBarButtonItem(), animated: false)
-        self.changeItemTintColor()
-        self.changeBarTintColor()
-        self.setHiddenRefresh()
     }
     
     // MARK: Public Method
@@ -265,8 +231,54 @@ public class ToolView: UIView {
         self.toolbar.setItems(items, animated: false)
     }
     
+    func initVars() {
+        let toolViewHeightConstraint = NSLayoutConstraint(item: self, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .height, multiplier: 1, constant: 0)
+        toolViewHeightConstraint.priority = UILayoutPriority(500)
+        self.addConstraint(toolViewHeightConstraint)
+        self.makeToolBar()
+        
+        self.clipsToBounds = true
+        self.toolbar.setItems(self.historyBarButtonItem(), animated: false)
+        self.changeItemTintColor()
+        self.changeBarTintColor()
+        self.setHiddenRefresh()
+    }
+    
     
     // MARK: Private Method
+    
+    private func makeToolBar() {
+        if self.isHiddenToolBar {
+            self.removeConstraints(self.constraints.filter({ $0.firstAttribute != .height }))
+            self.toolbar.removeFromSuperview()
+        } else {
+            if self.subviews.filter({ $0 == self.toolbar }).isEmpty {
+                self.addSubview(self.toolbar)
+                self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[toolbar]-0-|", options: [], metrics: nil, views: ["toolbar": toolbar]))
+                var bottomConstant: CGFloat = 0
+                if #available(iOS 11.0, *) {
+                    bottomConstant = UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0
+                }
+                let topConstraint = NSLayoutConstraint(
+                    item: self,
+                    attribute: .top,
+                    relatedBy: .equal,
+                    toItem: toolbar,
+                    attribute: .top,
+                    multiplier: 1,
+                    constant: 0)
+                let bottomConstraint = NSLayoutConstraint(
+                    item: self,
+                    attribute: .bottom,
+                    relatedBy: .equal,
+                    toItem: toolbar,
+                    attribute: .bottom,
+                    multiplier: 1,
+                    constant: bottomConstant)
+                self.addConstraints([topConstraint, bottomConstraint])
+            }
+        }
+    }
     
     private func historyBarButtonItem() -> [UIBarButtonItem] {
         guard let canGoBack = self.delegate?.toolViewWebCanGoBack,
