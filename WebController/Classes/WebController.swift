@@ -115,6 +115,20 @@ import WebKit
     
 }
 
+/*
+ WebController Options
+ */
+public struct WebOptions {
+    var strings = Strings()
+    
+    public struct Strings {
+        var confirm = "Confirm"
+        var cancel = "Cancel"
+        var error = "Error"
+    }
+    
+}
+
 open class WebController: UIViewController {
     
     // MARK: deinit
@@ -133,10 +147,15 @@ open class WebController: UIViewController {
     // MARK: Public Properties
     
     /**
+     WebOptions
+     */
+    public var options = WebOptions()
+    
+    /**
      WKWebView
      */
     public lazy var webView: WKWebView = {
-        let webView = WKWebView()
+        let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.allowsBackForwardNavigationGestures = true
         webView.navigationDelegate = self
@@ -263,6 +282,7 @@ open class WebController: UIViewController {
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = !self.webView.canGoBack
         self.webView.addObserver(self, forKeyPath: "estimatedProgress", options: .new, context: nil)
         self.webView.addObserver(self, forKeyPath: "URL", options: .new, context: nil)
         self.webView.addObserver(self, forKeyPath: "title", options: .new, context: nil)
@@ -272,6 +292,7 @@ open class WebController: UIViewController {
     open override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
+        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         self.webView.removeObserver(self, forKeyPath: "estimatedProgress")
         self.webView.removeObserver(self, forKeyPath: "URL")
         self.webView.removeObserver(self, forKeyPath: "title")
@@ -423,8 +444,8 @@ extension WebController: WKNavigationDelegate {
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         self.toolView.loadDidFinish()
         if error._code == NSURLErrorCancelled { return }
-        let alertController = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        let alertController = UIAlertController(title: self.options.strings.error, message: error.localizedDescription, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .default, handler: nil))
         guard self.delegate?.webController?(self, alertController: alertController, didUrl: webView.url) != nil else {
             self.present(alertController, animated: true, completion: nil)
             return
@@ -477,10 +498,10 @@ extension WebController: WKUIDelegate {
     
     public func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
         let alertController: UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "Confirm", style: .cancel, handler: {(action: UIAlertAction) -> Void in
+        alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .default, handler: {(action: UIAlertAction) -> Void in
             completionHandler(true)
         }))
-        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: {(action: UIAlertAction) -> Void in
+        alertController.addAction(UIAlertAction(title: self.options.strings.cancel, style: .cancel, handler: {(action: UIAlertAction) -> Void in
             completionHandler(false)
         }))
         guard self.delegate?.webController?(self, alertController: alertController, didUrl: webView.url) != nil else {
@@ -494,7 +515,7 @@ extension WebController: WKUIDelegate {
         alertController.addTextField { (textField) in
             textField.text = defaultText
         }
-        alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: {(action: UIAlertAction) -> Void in
+        alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .cancel, handler: {(action: UIAlertAction) -> Void in
             completionHandler(alertController.textFields?.first?.text)
         }))
         guard self.delegate?.webController?(self, alertController: alertController, didUrl: webView.url) != nil else {
@@ -505,7 +526,7 @@ extension WebController: WKUIDelegate {
     
     public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alertController: UIAlertController = UIAlertController(title: message, message: nil, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "OK", style: .cancel, handler: {(action: UIAlertAction) -> Void in
+        alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .cancel, handler: {(action: UIAlertAction) -> Void in
             completionHandler()
         }))
         guard self.delegate?.webController?(self, alertController: alertController, didUrl: webView.url) != nil else {

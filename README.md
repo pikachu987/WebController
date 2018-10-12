@@ -270,6 +270,34 @@ webController.load("https://www.google.com")
 self.navigationController?.pushViewController(webController, animated: true)
 ```
 
+```swift
+class CustomWebController: WebController {
+    static func instance() -> CustomWebController? {
+        let webController = CustomWebController()
+        webController.load("https://www.google.com")
+        return webController
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.webView.configuration.userContentController.add(self, name: "myApp")
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.webView.configuration.userContentController.removeScriptMessageHandler(forName: "myApp")
+    }
+}
+
+// MARK: WKScriptMessageHandler
+extension CustomWebController: WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        print(message)
+    }
+}
+
+```
+
 ## Author
 
 pikachu987, pikachu77769@gmail.com
