@@ -498,7 +498,7 @@ extension WebController: WKNavigationDelegate {
 extension WebController: WKUIDelegate {
     
     public func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
-        let alertController: UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
+        let alertController: UIAlertController = UIAlertController(title: message, message: nil, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .default, handler: {(action: UIAlertAction) -> Void in
             completionHandler(true)
         }))
@@ -512,7 +512,7 @@ extension WebController: WKUIDelegate {
     }
     
     public func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
-        let alertController: UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
+        let alertController: UIAlertController = UIAlertController(title: prompt, message: nil, preferredStyle: .alert)
         alertController.addTextField { (textField) in
             textField.text = defaultText
         }
