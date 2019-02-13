@@ -75,7 +75,7 @@ public class ToolView: UIView {
     /**
      UIToolbar
      */
-    public lazy var toolbar: UIToolbar = {
+    public let toolbar: UIToolbar = {
         let toolbar = UIToolbar()
         toolbar.translatesAutoresizingMaskIntoConstraints = false
         return toolbar

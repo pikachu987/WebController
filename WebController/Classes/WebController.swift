@@ -154,19 +154,17 @@ open class WebController: UIViewController {
     /**
      WKWebView
      */
-    public lazy var webView: WKWebView = {
+    public let webView: WKWebView = {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.allowsBackForwardNavigationGestures = true
-        webView.navigationDelegate = self
-        webView.uiDelegate = self
         return webView
     }()
     
     /**
      The UIProgressView that appears above the WebView when the site loads
      */
-    public lazy var progressView: UIProgressView = {
+    public let progressView: UIProgressView = {
         let progressView = UIProgressView()
         progressView.translatesAutoresizingMaskIntoConstraints = false
         progressView.progress = 0
@@ -176,8 +174,8 @@ open class WebController: UIViewController {
     /**
      The UIActivityIndicatorView that appears in the center of the webview when the site loads
      */
-    public lazy var indicatorView: UIActivityIndicatorView = {
-        let indicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorView.Style.whiteLarge)
+    public let indicatorView: UIActivityIndicatorView = {
+        let indicatorView = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.whiteLarge)
         indicatorView.color = UIColor.darkGray
         indicatorView.translatesAutoresizingMaskIntoConstraints = false
         indicatorView.isHidden = false
@@ -188,9 +186,8 @@ open class WebController: UIViewController {
     /**
      A UIView that wraps around the bottom UIToolbar.
      */
-    public lazy var toolView: ToolView = {
+    public let toolView: ToolView = {
         let view = ToolView()
-        view.delegate = self
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -220,12 +217,11 @@ open class WebController: UIViewController {
     
     private var openLoadURL: URL?
     
-    private lazy var titleButton: UIButton = {
+    private let titleButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("", for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         button.sizeToFit()
-        button.addTarget(self, action: #selector(self.shareAction(_:)), for: .touchUpInside)
         return button
     }()
     
@@ -270,6 +266,11 @@ open class WebController: UIViewController {
         self.view.addSubview(self.progressView)
         self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[progressView]-0-|", options: [], metrics: nil, views: ["progressView": self.progressView]))
         self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[topGuide]-0-[progressView(2)]", options: [], metrics: nil, views: ["progressView": self.progressView, "topGuide": self.topLayoutGuide]))
+        
+        self.titleButton.addTarget(self, action: #selector(self.shareAction(_:)), for: .touchUpInside)
+        self.toolView.delegate = self
+        self.webView.navigationDelegate = self
+        self.webView.uiDelegate = self
         
         self.toolView.initVars()
     }
