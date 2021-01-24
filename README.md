@@ -1,9 +1,11 @@
 # WebController
 
+[![CI Status](https://img.shields.io/travis/pikachu987/WebController.svg?style=flat)](https://travis-ci.org/pikachu987/WebController)
 [![Version](https://img.shields.io/cocoapods/v/WebController.svg?style=flat)](https://cocoapods.org/pods/WebController)
 [![License](https://img.shields.io/cocoapods/l/WebController.svg?style=flat)](https://cocoapods.org/pods/WebController)
 [![Platform](https://img.shields.io/cocoapods/p/WebController.svg?style=flat)](https://cocoapods.org/pods/WebController)
-[![Swift 5.0](https://img.shields.io/badge/Swift-5.0-orange.svg?style=flat)](https://developer.apple.com/swift/)
+![](https://img.shields.io/badge/Supported-iOS9%20%7C%20OSX%2010.9-4BC51D.svg?style=flat-square)
+![](https://img.shields.io/badge/Swift-5.0-orange.svg?style=flat)
 
 ## Introduce
 
@@ -22,7 +24,7 @@ Once you receive your app's schema from DeepLink or UniversalLink on your websit
 
 ## Requirements
 
-`WebController` written in Swift 5. Compatible with iOS 8.0+
+`WebController` written in Swift 5. Compatible with iOS 9.0+
 
 ## Installation
 

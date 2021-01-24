@@ -280,35 +280,22 @@ open class WebController: UIViewController {
         self.webView.stopLoading()
     }
     
+    private var estimatedProgressObserver: NSKeyValueObservation?
+    private var urlObserver: NSKeyValueObservation?
+    private var titleObserver: NSKeyValueObservation?
+    private var loadingObserver: NSKeyValueObservation?
+
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = !self.webView.canGoBack
-        self.webView.addObserver(self, forKeyPath: "estimatedProgress", options: .new, context: nil)
-        self.webView.addObserver(self, forKeyPath: "URL", options: .new, context: nil)
-        self.webView.addObserver(self, forKeyPath: "title", options: .new, context: nil)
-        self.webView.addObserver(self, forKeyPath: "loading", options: .new, context: nil)
-    }
-    
-    open override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
         
-        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
-        self.webView.removeObserver(self, forKeyPath: "estimatedProgress")
-        self.webView.removeObserver(self, forKeyPath: "URL")
-        self.webView.removeObserver(self, forKeyPath: "title")
-        self.webView.removeObserver(self, forKeyPath: "loading")
-    }
-    
-    
-    // MARK: KVO
-    
-    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        guard let keyPath = keyPath else {return}
-        switch keyPath {
-        case "estimatedProgress":
-            guard let newValue = change?[NSKeyValueChangeKey.newKey] as? NSNumber else { return }
-            self.progressView.setProgress(Float(truncating: newValue), animated: false)
+        self.removeObserver()
+        
+        self.estimatedProgressObserver = self.webView.observe(\.estimatedProgress, options: [.new]) { [weak self] (object, change) in
+            guard let self = self else { return }
+            guard let newValue = change.newValue else { return }
+            self.progressView.setProgress(Float(newValue), animated: false)
             if newValue == 1 {
                 UIView.animate(withDuration: 0.5, animations: {
                     self.progressView.alpha = 0
@@ -318,7 +305,10 @@ open class WebController: UIViewController {
             } else {
                 self.progressView.alpha = 1
             }
-        case "URL":
+        }
+        
+        self.urlObserver = self.webView.observe(\.url, options: [.new]) { [weak self] (object, change) in
+            guard let self = self else { return }
             guard let host = self.webView.url?.host else { return }
             if let title = self.delegate?.webController?(self, title: "\(host) ▾") {
                 self.titleButton.setTitle(title, for: .normal)
@@ -327,12 +317,18 @@ open class WebController: UIViewController {
             }
             self.titleButton.sizeToFit()
             self.delegate?.webController?(self, didChangeURL: self.webView.url)
-        case "title":
+        }
+        
+        self.titleObserver = self.webView.observe(\.title, options: [.new]) { [weak self] (object, change) in
+            guard let self = self else { return }
             self.delegate?.webController?(self, didChangeTitle: self.webView.title)
-        case "loading":
-            guard let value = change?[NSKeyValueChangeKey.newKey] as? Bool else { return }
-            self.delegate?.webController?(self, didLoading: !value)
-            if value {
+        }
+        
+        self.loadingObserver = self.webView.observe(\.isLoading, options: [.new]) { [weak self] (object, change) in
+            guard let self = self else { return }
+            guard let newValue = change.newValue else { return }
+            self.delegate?.webController?(self, didLoading: !newValue)
+            if newValue {
                 self.indicatorView.isHidden = false
                 self.indicatorView.startAnimating()
                 self.toolView.loadDidStart()
@@ -341,8 +337,61 @@ open class WebController: UIViewController {
                 self.indicatorView.stopAnimating()
                 self.toolView.loadDidFinish()
             }
-        default:
-            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+        }
+    }
+    
+    open override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        self.removeObserver()
+    }
+    
+    private func removeObserver() {
+        if #available(iOS 11.0, *) {
+            if let observer = self.estimatedProgressObserver {
+                observer.invalidate()
+                self.estimatedProgressObserver = nil
+            }
+            
+            if let observer = self.urlObserver {
+                observer.invalidate()
+                self.urlObserver = nil
+            }
+            
+            if let observer = self.titleObserver {
+                observer.invalidate()
+                self.titleObserver = nil
+            }
+            
+            if let observer = self.loadingObserver {
+                observer.invalidate()
+                self.loadingObserver = nil
+            }
+        } else {
+            if let observer = self.estimatedProgressObserver {
+                observer.invalidate()
+                self.webView.removeObserver(observer, forKeyPath: "estimatedProgress")
+                self.estimatedProgressObserver = nil
+            }
+            
+            if let observer = self.urlObserver {
+                observer.invalidate()
+                self.webView.removeObserver(observer, forKeyPath: "URL")
+                self.urlObserver = nil
+            }
+            
+            if let observer = self.titleObserver {
+                observer.invalidate()
+                self.webView.removeObserver(observer, forKeyPath: "title")
+                self.titleObserver = nil
+            }
+            
+            if let observer = self.loadingObserver {
+                observer.invalidate()
+                self.webView.removeObserver(observer, forKeyPath: "loading")
+                self.loadingObserver = nil
+            }
         }
     }
     
