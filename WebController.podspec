@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'WebController'
-  s.version          = '0.3.0'
+  s.version          = '0.3.1'
   s.summary          = 'UIViewController with easy WKWebView'
   s.description      = <<-DESC
   A UIViewController with a WKWebView.

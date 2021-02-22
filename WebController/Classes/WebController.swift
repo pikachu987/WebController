@@ -217,7 +217,7 @@ open class WebController: UIViewController {
     
     private var openLoadURL: URL?
     
-    private let titleButton: UIButton = {
+    public let titleButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("", for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
@@ -267,7 +267,7 @@ open class WebController: UIViewController {
         self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[progressView]-0-|", options: [], metrics: nil, views: ["progressView": self.progressView]))
         self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[topGuide]-0-[progressView(2)]", options: [], metrics: nil, views: ["progressView": self.progressView, "topGuide": self.topLayoutGuide]))
         
-        self.titleButton.addTarget(self, action: #selector(self.shareAction(_:)), for: .touchUpInside)
+        self.titleButton.addTarget(self, action: #selector(self.titleAction(_:)), for: .touchUpInside)
         self.toolView.delegate = self
         self.webView.navigationDelegate = self
         self.webView.uiDelegate = self
@@ -440,7 +440,11 @@ open class WebController: UIViewController {
      - Parameters:
      - sender: UIButton
      */
-    @objc private func shareAction(_ sender: UIButton) {
+    @objc private func titleAction(_ sender: UIButton) {
+        self.titleTap(sender)
+    }
+
+    open func titleTap(_ sender: UIButton) {
         guard let urlPath = self.webView.url?.absoluteString else { return }
         let activityViewController = UIActivityViewController(activityItems: [urlPath], applicationActivities: nil)
         activityViewController.popoverPresentationController?.sourceView = self.view
