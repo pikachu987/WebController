@@ -55,17 +55,24 @@ class ViewController: UIViewController {
 
 // MARK: WebControllerDelegate
 extension ViewController: WebControllerDelegate {
+    func webController(_ webController: WebController, error: Error) {
+        print("error: \(error)")
+    }
+
     func webController(_ webController: WebController, didLoading: Bool) {
         print("didLoading: \(didLoading)")
     }
+
     func webController(_ webController: WebController, didChangeURL: URL?) {
         guard let didChangeURL = didChangeURL else { return }
         print("didChangeURL: \(didChangeURL)")
     }
+
     func webController(_ webController: WebController, didChangeTitle: String?) {
         guard let didChangeTitle = didChangeTitle else { return }
         print("didChangeTitle: \(didChangeTitle)")
     }
+
     func webController(_ webController: WebController, title: String?) -> String? {
         return title?.replacingOccurrences(of: " ▾", with: "")
     }

@@ -60,6 +60,14 @@ import WebKit
     @objc optional func webController(_ webController: WebController, title: String?) -> String?
     
     /**
+     Called Error.
+     - Parameters:
+        - webController: WebControllerDelegate The UIViewController invoking the delegate method.
+        - error: Error
+     */
+    @objc optional func webController(_ webController: WebController, error: Error)
+    
+    /**
      It will be called when the site becomes an Alert.
      - Parameters:
      - webController: WebControllerDelegate The UIViewController invoking the delegate method.
@@ -493,6 +501,7 @@ extension WebController: WKNavigationDelegate {
     
     public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         self.toolView.loadDidFinish()
+        self.delegate?.webController?(self, error: error)
     }
     
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
