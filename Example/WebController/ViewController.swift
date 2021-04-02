@@ -74,6 +74,6 @@ extension ViewController: WebControllerDelegate {
     }
 
     func webController(_ webController: WebController, title: String?) -> String? {
-        return title?.replacingOccurrences(of: " ▾", with: "")
+        return title?.appending(" ❤️")
     }
 }

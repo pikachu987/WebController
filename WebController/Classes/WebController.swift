@@ -246,7 +246,7 @@ open class WebController: UIViewController {
         self.titleButton.setTitleColor(self.titleTintColor, for: .normal)
         
         if let host = self.webView.url?.host {
-            if let title = self.delegate?.webController?(self, title: "\(host) ▾") {
+            if let title = self.delegate?.webController?(self, title: host) {
                 self.titleButton.setTitle(title, for: .normal)
             } else {
                 self.titleButton.setTitle("\(host) ▾", for: .normal)
@@ -318,7 +318,7 @@ open class WebController: UIViewController {
         self.urlObserver = self.webView.observe(\.url, options: [.new]) { [weak self] (object, change) in
             guard let self = self else { return }
             guard let host = self.webView.url?.host else { return }
-            if let title = self.delegate?.webController?(self, title: "\(host) ▾") {
+            if let title = self.delegate?.webController?(self, title: host) {
                 self.titleButton.setTitle(title, for: .normal)
             } else {
                 self.titleButton.setTitle("\(host) ▾", for: .normal)
