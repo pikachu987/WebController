@@ -21,130 +21,12 @@
 import UIKit
 import WebKit
 
-/*
- Pass the changes in the WebController to the delegate.
- */
-@objc public protocol WebControllerDelegate: class {
-    
-    /**
-     Called when title changes.
-     - Parameters:
-        - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-        - didChangeTitle: The title to change.
-     */
-    @objc optional func webController(_ webController: WebController, didChangeTitle: String?)
-    
-    /**
-     Called when url changes.
-     - Parameters:
-        - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-        - didChangeURL: The url to change.
-     */
-    @objc optional func webController(_ webController: WebController, didChangeURL: URL?)
-    
-    /**
-     It is called when the load starts or ends.
-     - Parameters:
-        - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-        - didLoading: load starts or ends.
-     */
-    @objc optional func webController(_ webController: WebController, didLoading: Bool)
-    
-    /**
-     Called when title changes.
-     - Parameters:
-        - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-        - title: will change based on the return value.
-     - Returns: UINavigationTitle is changed. default is changed to title which is received as argument.
-     */
-    @objc optional func webController(_ webController: WebController, title: String?) -> String?
-    
-    /**
-     Called Error.
-     - Parameters:
-        - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-        - error: Error
-     */
-    @objc optional func webController(_ webController: WebController, error: Error)
-    
-    /**
-     It will be called when the site becomes an Alert.
-     - Parameters:
-     - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-     - alertController: This is an alert window that will appear on the screen.
-     - didUrl: The website URL with the alert window.
-     */
-    @objc optional func webController(_ webController: WebController, alertController: UIAlertController, didUrl: URL?)
-    
-    /**
-     If the website fails to load, the Alert is called.
-     - Parameters:
-     - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-     - alertController: This is an alert window that will appear on the screen.
-     - didUrl: The website URL with the alert window.
-     */
-    @objc optional func webController(_ webController: WebController, failAlertController: UIAlertController, didUrl: URL?)
-    
-    /**
-     If the scheme is not http or https, think of it as a deep link or universal link
-     - Parameters:
-     - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-     - openUrl: Url to use 'UIApplication.shared.openURL'.
-     - Returns: Return true to use 'UIApplication.shared.openURL'. default is true.
-     */
-    @objc optional func webController(_ webController: WebController, openUrl: URL?) -> Bool
-    
-    /**
-     Decides whether to allow or cancel a navigation.
-     - Parameters:
-     - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-     - navigationAction: Descriptive information about the action triggering the navigation request.
-     - decisionHandler: The decision handler to call to allow or cancel the navigation. The argument is one of the constants of the enumerated type WKNavigationActionPolicy.
-     */
-    @objc optional func webController(_ webController: WebController, navigationAction: WKNavigationAction, decisionHandler: (WKNavigationActionPolicy) -> Void)
-    
-    /**
-     Decides whether to allow or cancel a navigation after its response is known.
-     - Parameters:
-     - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-     - navigationResponse: Descriptive information about the navigation response.
-     - decisionHandler: decisionHandler The decision handler to call to allow or cancel the navigation. The argument is one of the constants of the enumerated type WKNavigationResponsePolicy.
-     */
-    @objc optional func webController(_ webController: WebController, navigationResponse: WKNavigationResponse, decisionHandler: (WKNavigationResponsePolicy) -> Void)
-    
-    /**
-     Invoked when the web view needs to respond to an authentication challenge.
-     - Parameters:
-     - webController: WebControllerDelegate The UIViewController invoking the delegate method.
-     - challenge: The authentication challenge.
-     - completionHandler: The completion handler you must invoke to respond to the challenge. The disposition argument is one of the constants of the enumerated type NSURLSessionAuthChallengeDisposition. When disposition is NSURLSessionAuthChallengeUseCredential, the credential argument is the credential to use, or nil to indicate continuing without a credential.
-     */
-    @objc optional func webController(_ webController: WebController, challenge: URLAuthenticationChallenge, completionHandler: (URLSession.AuthChallengeDisposition, URLCredential?) -> Void)
-    
-}
-
-/*
- WebController Options
- */
-public struct WebOptions {
-    var strings = Strings()
-    
-    public struct Strings {
-        var confirm = "Confirm"
-        var cancel = "Cancel"
-        var error = "Error"
-    }
-    
-}
-
 open class WebController: UIViewController {
     
     // MARK: deinit
     
     deinit {
-        self.webView.stopLoading()
-        self.webView.uiDelegate = nil
-        self.webView.navigationDelegate = nil
+        clear()
     }
     
     // MARK: delegate
@@ -153,60 +35,56 @@ open class WebController: UIViewController {
     
     
     // MARK: Public Properties
-    
+
     /**
      WebOptions
      */
-    public var options = WebOptions()
-    
+    public var configuration = WebConfiguration()
+
     /**
      WKWebView
      */
-    public let webView: WKWebView = {
-        let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
-        webView.translatesAutoresizingMaskIntoConstraints = false
-        webView.allowsBackForwardNavigationGestures = true
-        return webView
-    }()
-    
+    public lazy var webView: WKWebView = {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        $0.allowsBackForwardNavigationGestures = true
+        return $0
+    }(WKWebView(frame: .zero, configuration: WKWebViewConfiguration()))
+
     /**
      The UIProgressView that appears above the WebView when the site loads
      */
-    public let progressView: UIProgressView = {
-        let progressView = UIProgressView()
-        progressView.translatesAutoresizingMaskIntoConstraints = false
-        progressView.progress = 0
-        return progressView
-    }()
-    
+    public lazy var progressView: UIProgressView = {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        $0.progress = 0
+        return $0
+    }(UIProgressView())
+
     /**
      The UIActivityIndicatorView that appears in the center of the webview when the site loads
      */
-    public let indicatorView: UIActivityIndicatorView = {
-        let indicatorView = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.whiteLarge)
-        indicatorView.color = UIColor.darkGray
-        indicatorView.translatesAutoresizingMaskIntoConstraints = false
-        indicatorView.isHidden = false
-        indicatorView.startAnimating()
-        return indicatorView
-    }()
-    
+    public lazy var indicatorView: UIActivityIndicatorView = {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        $0.color = .darkGray
+        $0.isHidden = false
+        $0.startAnimating()
+        return $0
+    }(UIActivityIndicatorView(style: UIActivityIndicatorView.Style.whiteLarge))
+
     /**
      A UIView that wraps around the bottom UIToolbar.
      */
-    public let toolView: ToolView = {
-        let view = ToolView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
+    public lazy var toolView: ToolView = {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        return $0
+    }(ToolView(frame: .zero))
+
     /**
      Paints the title color of the UINavigationBar.
      */
     public var titleTintColor: UIColor? {
         didSet {
-            self.titleButton.setTitleColor(self.titleTintColor, for: .normal)
-            self.navigationController?.navigationBar.tintColor = self.titleTintColor
+            titleButton.setTitleColor(titleTintColor, for: .normal)
+            navigationController?.navigationBar.tintColor = titleTintColor
         }
     }
     
@@ -215,127 +93,183 @@ open class WebController: UIViewController {
      */
     public var barTintColor: UIColor? {
         didSet {
-            self.navigationController?.navigationBar.barTintColor = self.barTintColor
-            self.navigationController?.navigationBar.backgroundColor = self.barTintColor
+            navigationController?.navigationBar.barTintColor = barTintColor
+            navigationController?.navigationBar.backgroundColor = barTintColor
         }
     }
-    
     
     // MARK: Private Properties
     
-    private var openLoadURL: URL?
-    
-    public let titleButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("", for: .normal)
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
-        button.sizeToFit()
-        return button
-    }()
-    
-    
-    // MARK: Life Cycle
-    
-    open override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.navigationItem.titleView = self.titleButton
-        self.navigationController?.navigationBar.barTintColor = self.barTintColor
-        self.navigationController?.navigationBar.backgroundColor = self.barTintColor
-        self.navigationController?.navigationBar.tintColor = self.titleTintColor
-        self.titleButton.setTitleColor(self.titleTintColor, for: .normal)
-        
-        if let host = self.webView.url?.host {
-            if let title = self.delegate?.webController?(self, title: host) {
-                self.titleButton.setTitle(title, for: .normal)
-            } else {
-                self.titleButton.setTitle("\(host) ▾", for: .normal)
-            }
-            self.titleButton.sizeToFit()
-        }
-        
-        // Set up webView
-        self.view.addSubview(self.webView)
-        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[webView]-0-|", options: [], metrics: nil, views: ["webView": self.webView]))
-        
-        // Set up toolView
-        self.view.addSubview(self.toolView)
-        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[toolView]-0-|", options: [], metrics: nil, views: ["toolView": self.toolView]))
-        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:[toolView]-0-|", options: [], metrics: nil, views: ["toolView": self.toolView]))
-        
-        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[topGuide]-0-[webView]-0-[toolView]|", options: [], metrics: nil, views: ["webView": self.webView, "toolView": self.toolView, "topGuide": self.topLayoutGuide]))
-        
-        // Set up indicatorView
-        self.view.addSubview(self.indicatorView)
-        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:[webView]-(<=1)-[indicatorView]", options:.alignAllCenterY, metrics: nil, views: ["webView": self.webView, "indicatorView": self.indicatorView]))
-        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:[webView]-(<=1)-[indicatorView]", options:.alignAllCenterX, metrics: nil, views: ["webView": self.webView, "indicatorView": self.indicatorView]))
-        
-        // Set up progressView
-        self.view.addSubview(self.progressView)
-        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[progressView]-0-|", options: [], metrics: nil, views: ["progressView": self.progressView]))
-        self.view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[topGuide]-0-[progressView(2)]", options: [], metrics: nil, views: ["progressView": self.progressView, "topGuide": self.topLayoutGuide]))
-        
-        self.titleButton.addTarget(self, action: #selector(self.titleAction(_:)), for: .touchUpInside)
-        self.toolView.delegate = self
-        self.webView.navigationDelegate = self
-        self.webView.uiDelegate = self
-        
-        self.toolView.initVars()
-    }
-    
-    open override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        self.webView.stopLoading()
-    }
-    
+    public lazy var titleButton: UIButton = {
+        $0.setTitle("", for: .normal)
+        $0.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
+        $0.sizeToFit()
+        return $0
+    }(UIButton(type: .system))
+
     private var estimatedProgressObserver: NSKeyValueObservation?
     private var urlObserver: NSKeyValueObservation?
     private var titleObserver: NSKeyValueObservation?
     private var loadingObserver: NSKeyValueObservation?
 
-    open override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    private var isEnabledPopGesture: Bool = true
+
+    // MARK: Life Cycle
+    
+    open override func viewDidLoad() {
+        super.viewDidLoad()
+
+        isEnabledPopGesture = navigationController?.interactivePopGestureRecognizer?.isEnabled ?? true
+        print("isEnabledPopGesture: \(isEnabledPopGesture)")
+        setupViews()
+        setupObserver()
+    }
+
+    open override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
-        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = !self.webView.canGoBack
-        
-        self.removeObserver()
-        
-        self.estimatedProgressObserver = self.webView.observe(\.estimatedProgress, options: [.new]) { [weak self] (object, change) in
-            guard let self = self else { return }
-            guard let newValue = change.newValue else { return }
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = !webView.canGoBack
+    }
+    
+    open override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = isEnabledPopGesture
+    }
+}
+
+extension WebController {
+    // MARK: Public Method
+    
+    public func clear() {
+        removeObserver()
+        webView.stopLoading()
+        webView.uiDelegate = nil
+        webView.navigationDelegate = nil
+    }
+
+    /**
+     Navigates to a requested URL.
+     - Parameters:
+     - urlPath: Url to Load WebView
+     - cachePolicy: cachePolicy The cache policy for the request. Defaults to `.useProtocolCachePolicy`
+     - timeoutInterval: timeoutInterval The timeout interval for the request. Defaults to 0.0
+     */
+    public func load(_ urlPath: String?, cachePolicy: NSURLRequest.CachePolicy = .useProtocolCachePolicy, timeoutInterval: TimeInterval = 0) {
+        guard let urlPath = urlPath, let url = URL(string: urlPath) else { return }
+        load(url, cachePolicy: cachePolicy, timeoutInterval: timeoutInterval)
+    }
+
+    /**
+     Navigates to a requested URL.
+     - Parameters:
+     - url: Url to Load WebView
+     - cachePolicy: cachePolicy The cache policy for the request. Defaults to `.useProtocolCachePolicy`
+     - timeoutInterval: timeoutInterval The timeout interval for the request. Defaults to 0.0
+     */
+    public func load(_ url: URL?, cachePolicy: NSURLRequest.CachePolicy = .useProtocolCachePolicy, timeoutInterval: TimeInterval = 0) {
+        guard let url = url else { return }
+        webView.load(URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: timeoutInterval))
+    }
+
+    /**
+     Evaluates the given JavaScript string.
+     - Parameters:
+     - javaScriptString: The JavaScript string to evaluate.
+     - completionHandler: A block to invoke when script evaluation completes or fails.
+     */
+    public func evaluateJavaScript(_ javaScriptString: String, completionHandler: ((Any?, Error?) -> Void)?) {
+        webView.evaluateJavaScript(javaScriptString, completionHandler: completionHandler)
+    }
+}
+
+extension WebController {
+    private func setupViews() {
+        delegate = self
+        navigationItem.titleView = titleButton
+        navigationController?.navigationBar.barTintColor = barTintColor
+        navigationController?.navigationBar.backgroundColor = barTintColor
+        navigationController?.navigationBar.tintColor = titleTintColor
+        titleButton.setTitleColor(titleTintColor, for: .normal)
+
+        webView.url.map {
+            delegate?.webController(self, title: $0.host).map {
+                titleButton.setTitle($0, for: .normal)
+            }
+            titleButton.sizeToFit()
+        }
+
+        view.addSubview(webView)
+        view.addSubview(toolView)
+        view.addSubview(indicatorView)
+        view.addSubview(progressView)
+
+        NSLayoutConstraint.activate([
+            webView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            webView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
+        ])
+
+        NSLayoutConstraint.activate([
+            toolView.topAnchor.constraint(equalTo: webView.bottomAnchor),
+            toolView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            toolView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            toolView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+
+        NSLayoutConstraint.activate([
+            indicatorView.centerXAnchor.constraint(equalTo: webView.centerXAnchor),
+            indicatorView.centerYAnchor.constraint(equalTo: webView.centerYAnchor)
+        ])
+
+        NSLayoutConstraint.activate([
+            progressView.topAnchor.constraint(equalTo: webView.topAnchor),
+            progressView.leadingAnchor.constraint(equalTo: webView.leadingAnchor),
+            progressView.trailingAnchor.constraint(equalTo: webView.trailingAnchor)
+        ])
+
+        titleButton.addTarget(self, action: #selector(titleTapped(_:)), for: .touchUpInside)
+
+        toolView.delegate = self
+        webView.navigationDelegate = self
+        webView.uiDelegate = self
+    }
+}
+
+extension WebController {
+    private func setupObserver() {
+        estimatedProgressObserver = webView.observe(\.estimatedProgress, options: [.new]) { [weak self] object, change in
+            guard let self = self, let newValue = change.newValue else { return }
             self.progressView.setProgress(Float(newValue), animated: false)
             if newValue == 1 {
-                UIView.animate(withDuration: 0.5, animations: {
-                    self.progressView.alpha = 0
-                }) { (_) in
-                    self.progressView.setProgress(0, animated: false)
-                }
+                UIView.animate(withDuration: 0.5, animations: { [weak self] in
+                    self?.progressView.alpha = 0
+                }, completion: { [weak self] _ in
+                    self?.progressView.setProgress(0, animated: false)
+                })
             } else {
                 self.progressView.alpha = 1
             }
         }
-        
-        self.urlObserver = self.webView.observe(\.url, options: [.new]) { [weak self] (object, change) in
-            guard let self = self else { return }
-            guard let host = self.webView.url?.host else { return }
-            if let title = self.delegate?.webController?(self, title: host) {
-                self.titleButton.setTitle(title, for: .normal)
-            } else {
-                self.titleButton.setTitle("\(host) ▾", for: .normal)
+
+        urlObserver = webView.observe(\.url, options: [.new]) { [weak self] object, change in
+            guard let self = self, let host = self.webView.url?.host else { return }
+            self.delegate?.webController(self, title: host).map {
+                self.titleButton.setTitle($0, for: .normal)
             }
             self.titleButton.sizeToFit()
-            self.delegate?.webController?(self, didChangeURL: self.webView.url)
+            self.delegate?.webController(self, didChangeURL: self.webView.url)
         }
-        
-        self.titleObserver = self.webView.observe(\.title, options: [.new]) { [weak self] (object, change) in
+
+        titleObserver = webView.observe(\.title, options: [.new]) { [weak self] object, change in
             guard let self = self else { return }
-            self.delegate?.webController?(self, didChangeTitle: self.webView.title)
+            self.delegate?.webController(self, didChangeTitle: self.webView.title)
         }
-        
-        self.loadingObserver = self.webView.observe(\.isLoading, options: [.new]) { [weak self] (object, change) in
+
+        loadingObserver = webView.observe(\.isLoading, options: [.new]) { [weak self] object, change in
             guard let self = self else { return }
             guard let newValue = change.newValue else { return }
-            self.delegate?.webController?(self, didLoading: !newValue)
+            self.delegate?.webController(self, didLoading: !newValue)
             if newValue {
                 self.indicatorView.isHidden = false
                 self.indicatorView.startAnimating()
@@ -347,254 +281,196 @@ open class WebController: UIViewController {
             }
         }
     }
-    
-    open override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
-        self.removeObserver()
-    }
-    
+
     private func removeObserver() {
         if #available(iOS 11.0, *) {
-            if let observer = self.estimatedProgressObserver {
-                observer.invalidate()
-                self.estimatedProgressObserver = nil
-            }
-            
-            if let observer = self.urlObserver {
-                observer.invalidate()
-                self.urlObserver = nil
-            }
-            
-            if let observer = self.titleObserver {
-                observer.invalidate()
-                self.titleObserver = nil
-            }
-            
-            if let observer = self.loadingObserver {
-                observer.invalidate()
-                self.loadingObserver = nil
-            }
+            estimatedProgressObserver.map { $0.invalidate() }
+            urlObserver.map { $0.invalidate() }
+            titleObserver.map { $0.invalidate() }
+            loadingObserver.map { $0.invalidate() }
+
+            estimatedProgressObserver = nil
+            urlObserver = nil
+            titleObserver = nil
+            loadingObserver = nil
         } else {
-            if let observer = self.estimatedProgressObserver {
-                observer.invalidate()
-                self.webView.removeObserver(observer, forKeyPath: "estimatedProgress")
-                self.estimatedProgressObserver = nil
+            estimatedProgressObserver.map {
+                $0.invalidate()
+                webView.removeObserver($0, forKeyPath: "estimatedProgress")
             }
-            
-            if let observer = self.urlObserver {
-                observer.invalidate()
-                self.webView.removeObserver(observer, forKeyPath: "URL")
-                self.urlObserver = nil
+            urlObserver.map {
+                $0.invalidate()
+                webView.removeObserver($0, forKeyPath: "URL")
             }
-            
-            if let observer = self.titleObserver {
-                observer.invalidate()
-                self.webView.removeObserver(observer, forKeyPath: "title")
-                self.titleObserver = nil
+            titleObserver.map {
+                $0.invalidate()
+                webView.removeObserver($0, forKeyPath: "title")
             }
-            
-            if let observer = self.loadingObserver {
-                observer.invalidate()
-                self.webView.removeObserver(observer, forKeyPath: "loading")
-                self.loadingObserver = nil
+            loadingObserver.map {
+                $0.invalidate()
+                webView.removeObserver($0, forKeyPath: "loading")
             }
+
+            estimatedProgressObserver = nil
+            urlObserver = nil
+            titleObserver = nil
+            loadingObserver = nil
         }
     }
-    
-    
-    // MARK: Public Method
-    
-    /**
-     Navigates to a requested URL.
-     - Parameters:
-     - urlPath: Url to Load WebView
-     - cachePolicy: cachePolicy The cache policy for the request. Defaults to `.useProtocolCachePolicy`
-     - timeoutInterval: timeoutInterval The timeout interval for the request. Defaults to 0.0
-     */
-    public func load(_ urlPath: String?, cachePolicy: NSURLRequest.CachePolicy = .useProtocolCachePolicy, timeoutInterval: TimeInterval = 0) {
-        guard let urlPath = urlPath, let url = URL(string: urlPath) else { return }
-        self.load(url, cachePolicy: cachePolicy, timeoutInterval: timeoutInterval)
-    }
-    
-    /**
-     Navigates to a requested URL.
-     - Parameters:
-     - url: Url to Load WebView
-     - cachePolicy: cachePolicy The cache policy for the request. Defaults to `.useProtocolCachePolicy`
-     - timeoutInterval: timeoutInterval The timeout interval for the request. Defaults to 0.0
-     */
-    public func load(_ url: URL?, cachePolicy: NSURLRequest.CachePolicy = .useProtocolCachePolicy, timeoutInterval: TimeInterval = 0) {
-        guard let url = url else { return }
-        self.webView.load(URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: timeoutInterval))
-    }
-    
-    /**
-     Evaluates the given JavaScript string.
-     - Parameters:
-     - javaScriptString: The JavaScript string to evaluate.
-     - completionHandler: A block to invoke when script evaluation completes or fails.
-     */
-    public func evaluateJavaScript(_ javaScriptString: String, completionHandler: ((Any?, Error?) -> Void)?) {
-        self.webView.evaluateJavaScript(javaScriptString, completionHandler: completionHandler)
-    }
-    
-    
-    // MARK: Private Method
-    
-    /**
-     When you touch TitleView, a shared event that runs
-     - Parameters:
-     - sender: UIButton
-     */
-    @objc private func titleAction(_ sender: UIButton) {
-        self.titleTap(sender)
-    }
+}
 
-    open func titleTap(_ sender: UIButton) {
-        guard let urlPath = self.webView.url?.absoluteString else { return }
-        let activityViewController = UIActivityViewController(activityItems: [urlPath], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = self.view
-        self.present(activityViewController, animated: true, completion: nil)
+extension WebController {
+    @objc private func titleTapped(_ sender: UIButton) {
+        delegate?.webControllerTitleTap(self)
     }
 }
 
 // MARK: ToolViewDelegate
 extension WebController: ToolViewDelegate {
-    
-    var toolViewWebCanGoBack: Bool {
-        return self.webView.canGoBack
-    }
-    
-    var toolViewWebCanGoForward: Bool {
-        return self.webView.canGoForward
-    }
-    
-    func toolViewWebStopLoading() {
-        self.webView.stopLoading()
-    }
-    
-    func toolViewWebReload() {
-        self.webView.reload()
-    }
-    
-    func toolViewWebGoForward() {
-        self.webView.goForward()
-    }
-    
-    func toolViewWebGoBack() {
-        self.webView.goBack()
-    }
-    
+    var toolViewWebCanGoBack: Bool { webView.canGoBack }
+    var toolViewWebCanGoForward: Bool { webView.canGoForward }
+
+    func toolViewWebStopLoading() { webView.stopLoading() }
+    func toolViewWebReload() { webView.reload() }
+    func toolViewWebGoForward() { webView.goForward() }
+    func toolViewWebGoBack() { webView.goBack() }
+
     func toolViewInteractivePopGestureRecognizerEnabled(_ isEnabled: Bool) {
-        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = isEnabled
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = isEnabled
+    }
+}
+
+extension WebController: WebControllerDelegate {
+    @objc open func webController(_ webController: WebController, didChangeTitle: String?) {
+        internalWebController(webController, didChangeTitle: didChangeTitle)
+    }
+
+    @objc open func webController(_ webController: WebController, didChangeURL: URL?) {
+        internalWebController(webController, didChangeURL: didChangeURL)
+    }
+
+    @objc open func webController(_ webController: WebController, didLoading: Bool) {
+        internalWebController(webController, didLoading: didLoading)
+    }
+
+    @objc open func webController(_ webController: WebController, title: String?) -> String? {
+        internalWebController(webController, title: title)
+    }
+
+    @objc open func webController(_ webController: WebController, error: Error) {
+        internalWebController(webController, error: error)
+    }
+
+    @objc open func webController(_ webController: WebController, alertController: UIAlertController, didUrl: URL?) {
+        internalWebController(webController, alertController: alertController, didUrl: didUrl)
+    }
+
+    @objc open func webController(_ webController: WebController, failAlertController: UIAlertController, didUrl: URL?) {
+        internalWebController(webController, failAlertController: failAlertController, didUrl: didUrl)
+    }
+
+    @objc open func webController(_ webController: WebController, openUrl: URL?) -> Bool {
+        internalWebController(webController, openUrl: openUrl)
+    }
+
+    @objc open func webController(_ webController: WebController, navigationAction: WKNavigationAction, decisionHandler: (WKNavigationActionPolicy) -> Void) {
+        internalWebController(webController, navigationAction: navigationAction, decisionHandler: decisionHandler)
+    }
+
+    @objc open func webController(_ webController: WebController, navigationResponse: WKNavigationResponse, decisionHandler: (WKNavigationResponsePolicy) -> Void) {
+        internalWebController(webController, navigationResponse: navigationResponse, decisionHandler: decisionHandler)
+    }
+
+    @objc open func webController(_ webController: WebController, challenge: URLAuthenticationChallenge, completionHandler: (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        internalWebController(webController, challenge: challenge, completionHandler: completionHandler)
+    }
+
+    @objc open func webControllerTitleTap(_ webController: WebController) {
+        internalWebControllerTitleTap(webController)
     }
 }
 
 // MARK: WKNavigationDelegate
 extension WebController: WKNavigationDelegate {
-    
     public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        self.toolView.loadDidStart()
+        toolView.loadDidStart()
     }
     
     public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        self.toolView.loadDidFinish()
-        self.delegate?.webController?(self, error: error)
+        toolView.loadDidFinish()
+        delegate?.webController(self, error: error)
     }
     
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        self.toolView.loadDidFinish()
+        toolView.loadDidFinish()
         if error._code == NSURLErrorCancelled { return }
-        let alertController = UIAlertController(title: self.options.strings.error, message: error.localizedDescription, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .default, handler: nil))
-        guard self.delegate?.webController?(self, alertController: alertController, didUrl: webView.url) != nil else {
-            self.present(alertController, animated: true, completion: nil)
-            return
-        }
+        let alertController = UIAlertController(title: configuration.strings.error, message: error.localizedDescription, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: configuration.strings.confirm, style: .default, handler: nil))
+        delegate?.webController(self, alertController: alertController, didUrl: webView.url)
     }
     
     public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        guard self.delegate?.webController?(self, navigationAction: navigationAction, decisionHandler: decisionHandler) != nil else {
-            guard let url = navigationAction.request.url else {
-                decisionHandler(.cancel)
-                return
-            }
-            decisionHandler(.allow)
-            if let scheme = url.scheme, !( scheme == "http" || scheme == "https") {
-                self.openLoadURL = nil
-                guard self.delegate?.webController?(self, openUrl: url) != nil else {
-                    UIApplication.shared.openURL(url)
-                    return
-                }
-            } else if url.absoluteString.contains("app.link") && self.openLoadURL == nil{
-                self.openLoadURL = url
-                self.load(url)
-            } else {
-                self.openLoadURL = nil
-                if let currentURL = self.webView.url, url == currentURL {
-                    return
-                }
-            }
-            return
-        }
+        delegate?.webController(self, navigationAction: navigationAction, decisionHandler: decisionHandler)
     }
     
     public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
-        guard self.delegate?.webController?(self, navigationResponse: navigationResponse, decisionHandler: decisionHandler) != nil else {
-            decisionHandler(.allow)
-            return
-        }
+        delegate?.webController(self, navigationResponse: navigationResponse, decisionHandler: decisionHandler)
     }
     
     public func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard self.delegate?.webController?(self, challenge: challenge, completionHandler: completionHandler) != nil else {
-            completionHandler(.performDefaultHandling, nil)
-            return
-        }
+        delegate?.webController(self, challenge: challenge, completionHandler: completionHandler)
     }
+    public func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {}
+    public func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {}
+    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
+    public func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {}
+
+    public func webView(_ webView: WKWebView, authenticationChallenge challenge: URLAuthenticationChallenge, shouldAllowDeprecatedTLS decisionHandler: @escaping (Bool) -> Void) {
+        decisionHandler(true)
+    }
+    public func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {}
+    public func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {}
 }
 
 // MARK: WKUIDelegate
 extension WebController: WKUIDelegate {
-    
     public func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
         let alertController: UIAlertController = UIAlertController(title: message, message: nil, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .default, handler: {(action: UIAlertAction) -> Void in
+        alertController.addAction(UIAlertAction(title: configuration.strings.confirm, style: .default, handler: { _ in
             completionHandler(true)
         }))
-        alertController.addAction(UIAlertAction(title: self.options.strings.cancel, style: .cancel, handler: {(action: UIAlertAction) -> Void in
+        alertController.addAction(UIAlertAction(title: configuration.strings.cancel, style: .cancel, handler: { _ in
             completionHandler(false)
         }))
-        guard self.delegate?.webController?(self, alertController: alertController, didUrl: webView.url) != nil else {
-            self.present(alertController, animated: true, completion: nil)
-            return
-        }
+        delegate?.webController(self, alertController: alertController, didUrl: webView.url)
     }
     
     public func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
         let alertController: UIAlertController = UIAlertController(title: prompt, message: nil, preferredStyle: .alert)
-        alertController.addTextField { (textField) in
+        alertController.addTextField { textField in
             textField.text = defaultText
         }
-        alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .cancel, handler: {(action: UIAlertAction) -> Void in
+        alertController.addAction(UIAlertAction(title: configuration.strings.confirm, style: .cancel, handler: { _ in
             completionHandler(alertController.textFields?.first?.text)
         }))
-        guard self.delegate?.webController?(self, alertController: alertController, didUrl: webView.url) != nil else {
-            self.present(alertController, animated: true, completion: nil)
-            return
-        }
+        delegate?.webController(self, alertController: alertController, didUrl: webView.url)
     }
     
     public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alertController: UIAlertController = UIAlertController(title: message, message: nil, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: self.options.strings.confirm, style: .cancel, handler: {(action: UIAlertAction) -> Void in
+        alertController.addAction(UIAlertAction(title: configuration.strings.confirm, style: .cancel, handler: { _ in
             completionHandler()
         }))
-        guard self.delegate?.webController?(self, alertController: alertController, didUrl: webView.url) != nil else {
-            self.present(alertController, animated: true, completion: nil)
-            return
-        }
+        delegate?.webController(self, alertController: alertController, didUrl: webView.url)
     }
+
+    public func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if navigationAction.targetFrame?.isMainFrame == nil {
+            webView.load(navigationAction.request)
+        }
+        return nil
+    }
+
+    public func webViewDidClose(_ webView: WKWebView) {}
+    public func webView(_ webView: WKWebView, commitPreviewingViewController previewingViewController: UIViewController) {}
 }

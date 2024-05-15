@@ -23,8 +23,8 @@ import UIKit
 /*
  A delegate that passes the state changes of the ToolView to the WebController.
  */
-protocol ToolViewDelegate: class {
-    
+protocol ToolViewDelegate: AnyObject {
+
     /**
      Check if WebView can 'GoBack'.
      */
@@ -75,18 +75,17 @@ public class ToolView: UIView {
     /**
      UIToolbar
      */
-    public let toolbar: UIToolbar = {
-        let toolbar = UIToolbar()
-        toolbar.translatesAutoresizingMaskIntoConstraints = false
-        return toolbar
-    }()
-    
+    public lazy var toolbar: UIToolbar = {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        return $0
+    }(UIToolbar(frame: .init(origin: .zero, size: .init(width: 200, height: 60))))
+
     /**
      Paints the colors of the UIToolbar's items.
      */
     public var itemTintColor: UIColor? {
         didSet {
-            self.changeItemTintColor()
+            changeItemTintColor()
         }
     }
     
@@ -95,7 +94,7 @@ public class ToolView: UIView {
      */
     public var barTintColor: UIColor? {
         didSet {
-            self.changeBarTintColor()
+            changeBarTintColor()
         }
     }
     
@@ -105,7 +104,7 @@ public class ToolView: UIView {
      */
     public var isHiddenRefresh: Bool = false {
         didSet {
-            self.setHiddenRefresh()
+            setHiddenRefresh()
         }
     }
     
@@ -115,10 +114,9 @@ public class ToolView: UIView {
      */
     public var isHiddenToolBar: Bool = false {
         didSet {
-            self.makeToolBar()
+
         }
     }
-    
     
     // MARK: Private Properties
     
@@ -147,204 +145,184 @@ public class ToolView: UIView {
      Included in items in UIToolBar.
      */
     private lazy var stopBarButtonItem: UIBarButtonItem? = UIBarButtonItem(barButtonSystemItem: .stop, target: self, action: #selector(self.stop(_:)))
-    
-    
+
     // MARK: Life Cycle
-    
-    public override func awakeFromNib() {
-        super.awakeFromNib()
-        
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+
+        setupViews()
     }
     
-    // MARK: Public Method
-    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+extension ToolView {
     /**
      Back to UIToolbar Change UIBarButtonitem to title.
      - Parameters:
      - title: Title of UIBarButtonitem
      */
     public func setBackBarButtonItem(_ title: String?) {
-        self.backBarButtonItem = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(self.goBack(_:)))
-        self.backBarButtonItem?.tintColor = self.itemTintColor
+        backBarButtonItem = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(goBack(_:)))
+        backBarButtonItem?.tintColor = itemTintColor
     }
-    
+
     /**
      Back to UIToolbar Change UIBarButtonitem to image.
      - Parameters:
      - image: Image of UIBarButtonitem
      */
     public func setBackBarButtonItem(_ image: UIImage?) {
-        self.backBarButtonItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(self.goBack(_:)))
-        self.backBarButtonItem?.tintColor = self.itemTintColor
+        backBarButtonItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(goBack(_:)))
+        backBarButtonItem?.tintColor = itemTintColor
     }
-    
+
     /**
      Forward to UIToolbar Change UIBarButtonitem to title.
      - Parameters:
      - title: Title of UIBarButtonitem
      */
     public func setForwardBarButtonItem(_ title: String?) {
-        self.forwardBarButtonItem = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(self.goForward(_:)))
-        self.forwardBarButtonItem?.tintColor = self.itemTintColor
+        forwardBarButtonItem = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(goForward(_:)))
+        forwardBarButtonItem?.tintColor = itemTintColor
     }
-    
+
     /**
      Forward to UIToolbar Change UIBarButtonitem to image.
      - Parameters:
      - image: Image of UIBarButtonitem
      */
     public func setForwardBarButtonItem(_ image: UIImage?) {
-        self.forwardBarButtonItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(self.goForward(_:)))
-        self.forwardBarButtonItem?.tintColor = self.itemTintColor
+        forwardBarButtonItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(goForward(_:)))
+        forwardBarButtonItem?.tintColor = itemTintColor
     }
-    
-    
-    // MARK: Internal Method
-    
+}
+
+extension ToolView {
     /**
      Runs when the site is loaded.
      stopBarButtonItem appears.
      */
     func loadDidStart() {
-        var items = self.historyBarButtonItem()
-        if let stopBarButtonItem = self.stopBarButtonItem {
-            items.append(contentsOf: [
-                UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
-                stopBarButtonItem
-                ])
+        var items = historyBarButtonItem()
+        if let stopBarButtonItem = stopBarButtonItem {
+            items.append(contentsOf: [UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
+                                      stopBarButtonItem])
         }
-        self.toolbar.setItems(items, animated: false)
+        toolbar.setItems(items, animated: false)
     }
-    
+
     /**
      Run when the site is finished.
      refreshBarButtonItem appears.
      */
     func loadDidFinish() {
-        var items = self.historyBarButtonItem()
-        if let reloadBarButtonItem = self.reloadBarButtonItem {
-            items.append(contentsOf: [
-                UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
-                reloadBarButtonItem
-                ])
+        var items = historyBarButtonItem()
+        if let reloadBarButtonItem = reloadBarButtonItem {
+            items.append(contentsOf: [UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
+                                      reloadBarButtonItem])
         }
-        self.toolbar.setItems(items, animated: false)
+        toolbar.setItems(items, animated: false)
     }
-    
-    func initVars() {
-        let toolViewHeightConstraint = NSLayoutConstraint(item: self, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .height, multiplier: 1, constant: 0)
-        toolViewHeightConstraint.priority = UILayoutPriority(500)
-        self.addConstraint(toolViewHeightConstraint)
-        self.makeToolBar()
-        
-        self.clipsToBounds = true
-        self.toolbar.setItems(self.historyBarButtonItem(), animated: false)
-        self.changeItemTintColor()
-        self.changeBarTintColor()
-        self.setHiddenRefresh()
+}
+
+extension ToolView {
+    private func setupViews() {
+        clipsToBounds = true
+
+        addSubview(toolbar)
+
+        NSLayoutConstraint.activate([
+            toolbar.topAnchor.constraint(equalTo: topAnchor),
+            toolbar.leadingAnchor.constraint(equalTo: leadingAnchor),
+            toolbar.trailingAnchor.constraint(equalTo: trailingAnchor),
+            toolbar.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
+
+        toolbar.setItems(historyBarButtonItem(), animated: false)
+        changeItemTintColor()
+        changeBarTintColor()
+        setHiddenRefresh()
     }
-    
-    
-    // MARK: Private Method
-    
-    private func makeToolBar() {
-        if self.isHiddenToolBar {
-            self.removeConstraints(self.constraints.filter({ $0.firstAttribute != .height }))
-            self.toolbar.removeFromSuperview()
-        } else {
-            if self.subviews.filter({ $0 == self.toolbar }).isEmpty {
-                self.addSubview(self.toolbar)
-                self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-0-[toolbar]-0-|", options: [], metrics: nil, views: ["toolbar": toolbar]))
-                var bottomConstant: CGFloat = 0
-                if #available(iOS 11.0, *) {
-                    bottomConstant = UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0
-                }
-                let topConstraint = NSLayoutConstraint(
-                    item: self,
-                    attribute: .top,
-                    relatedBy: .equal,
-                    toItem: toolbar,
-                    attribute: .top,
-                    multiplier: 1,
-                    constant: 0)
-                let bottomConstraint = NSLayoutConstraint(
-                    item: self,
-                    attribute: .bottom,
-                    relatedBy: .equal,
-                    toItem: toolbar,
-                    attribute: .bottom,
-                    multiplier: 1,
-                    constant: bottomConstant)
-                self.addConstraints([topConstraint, bottomConstraint])
-            }
-        }
-    }
-    
+}
+
+extension ToolView {
     private func historyBarButtonItem() -> [UIBarButtonItem] {
-        guard let canGoBack = self.delegate?.toolViewWebCanGoBack,
-            let canGoForward = self.delegate?.toolViewWebCanGoForward
-            else { return [UIBarButtonItem]() }
-        
-        self.backBarButtonItem?.isEnabled = canGoBack
-        self.forwardBarButtonItem?.isEnabled = canGoForward
-        self.delegate?.toolViewInteractivePopGestureRecognizerEnabled(!canGoBack)
+        guard let canGoBack = delegate?.toolViewWebCanGoBack,
+            let canGoForward = delegate?.toolViewWebCanGoForward else { return [UIBarButtonItem]() }
+
+        backBarButtonItem?.isEnabled = canGoBack
+        forwardBarButtonItem?.isEnabled = canGoForward
+        delegate?.toolViewInteractivePopGestureRecognizerEnabled(!canGoBack)
+
         var items = [UIBarButtonItem]()
-        if let barButtonItem = self.backBarButtonItem {
+
+        if let barButtonItem = backBarButtonItem {
             items.append(barButtonItem)
         } else {
-            let barButtonItem = UIBarButtonItem(title: "◀︎", style: .plain, target: self, action: #selector(self.goBack(_:)))
+            let barButtonItem = UIBarButtonItem(title: "◀︎", style: .plain, target: self, action: #selector(goBack(_:)))
             barButtonItem.isEnabled = canGoBack
             items.append(barButtonItem)
-            self.backBarButtonItem = barButtonItem
+            backBarButtonItem = barButtonItem
         }
-        if let barButtonItem = self.forwardBarButtonItem {
+
+        if let barButtonItem = forwardBarButtonItem {
             items.append(barButtonItem)
         } else {
-            let barButtonItem = UIBarButtonItem(title: "▶︎", style: .plain, target: self, action: #selector(self.goForward(_:)))
+            let barButtonItem = UIBarButtonItem(title: "▶︎", style: .plain, target: self, action: #selector(goForward(_:)))
             barButtonItem.isEnabled = canGoForward
             items.append(barButtonItem)
-            self.forwardBarButtonItem = barButtonItem
+            forwardBarButtonItem = barButtonItem
         }
+
         return items
     }
-    
+}
+
+extension ToolView {
     private func changeItemTintColor() {
-        self.backBarButtonItem?.tintColor = self.itemTintColor
-        self.forwardBarButtonItem?.tintColor = self.itemTintColor
-        self.reloadBarButtonItem?.tintColor = self.itemTintColor
-        self.stopBarButtonItem?.tintColor = self.itemTintColor
+        backBarButtonItem?.tintColor = itemTintColor
+        forwardBarButtonItem?.tintColor = itemTintColor
+        reloadBarButtonItem?.tintColor = itemTintColor
+        stopBarButtonItem?.tintColor = itemTintColor
     }
-    
+
     private func changeBarTintColor() {
-        self.backgroundColor = self.barTintColor
-        self.toolbar.barTintColor = self.barTintColor
+        backgroundColor = barTintColor
+        toolbar.barTintColor = barTintColor
     }
-    
+}
+
+extension ToolView {
     private func setHiddenRefresh() {
-        if self.isHiddenRefresh {
-            self.reloadBarButtonItem = nil
-            self.stopBarButtonItem = nil
+        if isHiddenRefresh {
+            reloadBarButtonItem = nil
+            stopBarButtonItem = nil
         } else {
-            self.reloadBarButtonItem = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(self.reload(_:)))
-            self.stopBarButtonItem = UIBarButtonItem(barButtonSystemItem: .stop, target: self, action: #selector(self.stop(_:)))
-            self.reloadBarButtonItem?.tintColor = self.itemTintColor
-            self.stopBarButtonItem?.tintColor = self.itemTintColor
+            reloadBarButtonItem = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(reload(_:)))
+            stopBarButtonItem = UIBarButtonItem(barButtonSystemItem: .stop, target: self, action: #selector(stop(_:)))
+            reloadBarButtonItem?.tintColor = itemTintColor
+            stopBarButtonItem?.tintColor = itemTintColor
         }
     }
-    
+}
+
+extension ToolView {
     @objc private func goBack(_ sender: UIBarButtonItem) {
-        self.delegate?.toolViewWebGoBack()
+        delegate?.toolViewWebGoBack()
     }
-    
+
     @objc private func goForward(_ sender: UIBarButtonItem) {
-        self.delegate?.toolViewWebGoForward()
+        delegate?.toolViewWebGoForward()
     }
-    
+
     @objc private func reload(_ sender: UIBarButtonItem) {
-        self.delegate?.toolViewWebReload()
+        delegate?.toolViewWebReload()
     }
-    
+
     @objc private func stop(_ sender: UIBarButtonItem) {
-        self.delegate?.toolViewWebStopLoading()
+        delegate?.toolViewWebStopLoading()
     }
 }
